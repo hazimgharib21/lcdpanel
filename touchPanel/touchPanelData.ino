@@ -41,8 +41,16 @@ void pinData(){
 int getPinTouched(){
   for(int i = 0; i < 17; i++){
     if(output[i] < relValue[i] - treshold[i]){
+      
       return i;
     }
   }
-  // return 17;
+  return 17;
+  
 }
+
+void pinLED(int pin){
+  led(dataPin, clockPin, latchPin, pin);
+}
+
+
