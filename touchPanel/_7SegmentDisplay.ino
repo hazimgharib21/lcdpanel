@@ -1,8 +1,9 @@
 /*
- * 7 segment countdown fucntion
+ * 7 segment countdown function
+ *
+ *  The number receive will be seperated. Each number for each 7 segment.
  */
 void Countdown(uint8_t data[], uint8_t clk[], uint8_t latch[], uint8_t count){
-  //Serial.print("Countdown : ");
 
   int temp;
 
@@ -16,8 +17,5 @@ void Countdown(uint8_t data[], uint8_t clk[], uint8_t latch[], uint8_t count){
   digitalWrite(latch[0],LOW);
   shiftOut(data[0],clk[0],MSBFIRST,numHex[num2]);
   digitalWrite(latch[0],HIGH);
-
-  //Serial.print(num1);
-  //Serial.println(num2);
-  
+ 
 }
