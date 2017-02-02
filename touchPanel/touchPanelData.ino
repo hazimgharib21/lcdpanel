@@ -1,25 +1,29 @@
 /*
- * int pin - value of the pin
- * Get 200 data of realease value
- * Calculate the average of the last 50 data
- * return the average of the realease value from touch panel
+  This function is use to collect 200 raw data from touch panel
+  From the 200 data, we use the last 50 data to get the average value
+  This is because the last 50 data is the stable data. The data is not accurate when starting up
  */
 int relVal(int pin){
+
   int sum;
   
   for(int i = 0; i < 200; i++){
+
     if(pin > 11){
       output[pin] += (mprA.filteredData(pin - 12) - output[pin]) * 0.07;
     }
+
     output[pin] += (mprB.filteredData(pin) - output[pin]) * 0.07;
     average[i] = output[pin];
   }
+
   for(int i = 150; i < 200; i++){
     sum += average[i];
   }
-  //Serial.println(sum/50);
+
   return (sum / 50);
 }
+
 /*
  * Use to always update the smooth input from touch panel
  */
@@ -32,6 +36,7 @@ void pinData(){
     
   }
 }
+
 /*
  * Use the realease value and compare it with the current input value
  * output[] - current touch panel input
@@ -49,8 +54,5 @@ int getPinTouched(){
   
 }
 
-void pinLED(int pin){
-  led(dataPin, clockPin, latchPin, pin);
-}
 
 
