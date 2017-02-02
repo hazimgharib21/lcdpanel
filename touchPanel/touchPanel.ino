@@ -1,13 +1,9 @@
-/*
-  include all library needed
- */
+//  include all library needed
 #include <Adafruit_MPR121.h> // library for MPR121 touch sensor
 #include <Wire.h> // library for i2c (needed with Adafruit_MPR121.h)
 #include <SoftwareSerial.h> // Use softwareSerial to use serial com with other pin
 
-/*
-  Define needed variable for code
- */
+//  Define needed variable for code
 #define arraySize(x) ((sizeof(x)) / (sizeof(x[0]))) // to get array length
 #define outputLogic true // Output pin logic
 
@@ -32,12 +28,11 @@
 #define startLED 8
 
 // Initialize timer
-//unsigned long panelMillis = 0;
 unsigned long pinMillis = 0;
 unsigned long timerMillis = 0;
 unsigned long endMillis = 0;
 unsigned long testMillis = 0;
-unsigned long resetMillis = 0;
+//unsigned long resetMillis = 0;
 unsigned long runningMillis = 0;
 unsigned long updateCount = 0;
 int stillRunning = 1000;
@@ -47,7 +42,7 @@ int endUpdate = 20000;
 int timerUpdate = 1000;
 //int panelUpdate = 1000;
 int pinUpdate = 10;
-int touchInput = 17;
+//int touchInput = 17;
 
 boolean buzzerBol = false;
 uint16_t lasttouched = 0;
@@ -93,15 +88,15 @@ float output[17] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
  * 50 sample are taken to get the value
  */
 int relValue[17] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-/*
- * Hex number to use with 7segment code
- */
+
+//  Hex number to use with 7segment code
 int numHex[] = {192, 249, 164, 176, 153, 146, 130, 248, 128, 152, 0};
+
+// This is use for the 7 segment pattern while waiting
 int pusingPusing[] = {254, 253, 243, 239, 223 , 127};
 int pusingLagi = 0;
-/*
- * Bin number to use with led
- */
+
+//  Bin number to use with led
 int numBin[] = {
   1, 
   2, 
@@ -123,21 +118,23 @@ int numBin[] = {
   0
 };
 
-
+// use to store the first 200 value of touch panel
 int average[200] = {};
 
-
+// variable
 int endGame = 20;
 int noTouch = 22;
 int resetTouch = 21;
 boolean nasihat = false;
 
+// initialize SoftwareSerial pin
 SoftwareSerial mySerial(15, 16); // RX, TX
 
+// initialize mpr121
 Adafruit_MPR121 mprA = Adafruit_MPR121();
 Adafruit_MPR121 mprB = Adafruit_MPR121();
 
-// initialize output for 7 segment
+// the array and struct use for output initialization
 uint8_t dataPin[] = {
   data_0,
   data_1,
@@ -167,27 +164,19 @@ struct outputStruct{
 
 
 void setup() {
+
   initialization();
+
+  // initialize 7 segment and led with initial value
   Countdown(dataPin, clockPin, latchPin, 0);
   led(dataPin, clockPin, latchPin, 8);
-
-  //Serial.println ();
-  //Serial.println (F("Code starting ..."));
-  //wdt_enable(WDTO_8S);
 
 }
 
 void loop() {
-  /*
-   * Always update the smooth input from touch panel(release)
-   */
-  testMillis += 4294967295;
-  Serial.println(testMillis);
-  if(mySerial.overflow()){
-    Serial.println("SoftwareSerial Overflow!!");
-  }
-    
-   if((millis() - runningMillis) >= stillRunning){
+
+    // Use for debugging the hang problem
+  if((millis() - runningMillis) >= stillRunning){
     Serial.print("Still running for " );
     int minit = (updateCount) / 60;
     Serial.print(minit);
@@ -196,75 +185,79 @@ void loop() {
     Serial.print("Free Ram : ");
     Serial.println(freeRam());
     updateCount++;
-   }
+  }
 
-   delay(10);
+  delay(10);
    
-  
+  // check user input every 50ms 
   if((millis() - pinMillis) >= pinUpdate){
+
+    // Initialize touch led and 7 segment
     Countdown(dataPin, clockPin, latchPin, 0);
     led(dataPin, clockPin, latchPin, 17);
-      pinMillis = millis();
-      pinData();
+    pinMillis = millis();
+    pinData();
 
       
-      if(getPinTouched() == 16){
-        digitalWrite(startLED, HIGH);
-          for(int j = 0; j < 5; j++){
-    digitalWrite(buzzer, HIGH);
-    delay(50);
-    digitalWrite(buzzer, LOW);
-    delay(50);
-    digitalWrite(startLED, LOW);
-  }
-          mySerial.write(16);
-          start = true;
-        
+    if(getPinTouched() == 16){
+
+      digitalWrite(startLED, HIGH);
+      for(int j = 0; j < 5; j++){
+
+        digitalWrite(buzzer, HIGH);
+        delay(50);
+        digitalWrite(buzzer, LOW);
+        delay(50);
+        digitalWrite(startLED, LOW);
+      }
+
+        mySerial.write(16);
+        start = true;
       }
   }
-  // start touch panel is push
-  while(start && mpr){
 
+  // Start game when touch panel is touched
+  while(start){
     
     // Always update for 7 segment
     Countdown(dataPin, clockPin, latchPin, count);
     
-    /*
-     * Always update the smooth input from touch panel(release)
-     */
-     delay(10);
+    // Always update the smooth input from touch panel(release)
+    pinData();
+
+    delay(10);
     
-      pinData();
-      currtouched = getPinTouched();
+    // Here we implement debounce for the touched input
+    currtouched = getPinTouched();
 
-      for(uint8_t i = 0; i < 16; i++){
+    for(uint8_t i = 0; i < 16; i++){
 
-        if((numBin[currtouched] & _BV(i)) && !(numBin[lasttouched] & _BV(i))){
-          //Serial.print(i); Serial.println(" touched");
-          mySerial.write(i);
-          led(dataPin, clockPin, latchPin, currtouched);
-          bebunyi(1);
-        }
-        if(!(numBin[currtouched] & _BV(i)) && (numBin[lasttouched] & _BV(i))){
-          //Serial.print(i); Serial.println(" released");
-          led(dataPin, clockPin, latchPin, 17);
-          bebunyi(0);
+      if((numBin[currtouched] & _BV(i)) && !(numBin[lasttouched] & _BV(i))){
+
+        mySerial.write(i);
+        led(dataPin, clockPin, latchPin, currtouched);
+        bebunyi(1);
+      }
+
+      if(!(numBin[currtouched] & _BV(i)) && (numBin[lasttouched] & _BV(i))){
+
+        led(dataPin, clockPin, latchPin, 17);
+        bebunyi(0);
         }
     }
 
-      lasttouched = currtouched;
+    lasttouched = currtouched;
     
     /*
      * Update the countdown timer every 1 second
      */
     if((millis() - timerMillis) >= timerUpdate){
+
       timerMillis = millis();
-      //Serial.print("Countdown : ");
-      //Serial.println(count);
       count--;
     }
+
     // endGame when counter reach zero
-    
     if(count == 0){
       
       nasihat = true;
@@ -282,9 +275,13 @@ void loop() {
     }
   }
 
+  // The waiting part while the led scroller give advice
   while(nasihat){
-      delay(10);
+
+    delay(10);
     pusingLagi++;
+
+    // The smooth data from touch panel is still updated
     if((millis() - pinMillis) >= pinUpdate){
       pinMillis = millis();
       pinData();
@@ -292,10 +289,10 @@ void loop() {
     if((millis() - endMillis) >= endUpdate){
       endMillis = millis();
       nasihat = false;
-      //Serial.println("aleuto");
     }
 
-    digitalWrite(latchPin[1],LOW);
+  // the 7 segment pattern while waiting
+  digitalWrite(latchPin[1],LOW);
   shiftOut(dataPin[1],clockPin[1],MSBFIRST,pusingPusing[pusingLagi]);
   digitalWrite(latchPin[1],HIGH);
   
@@ -306,7 +303,9 @@ void loop() {
   if(pusingLagi == 6){
     pusingLagi = 0;
   }
+
   delay(50);
+  
   }
   
 }
