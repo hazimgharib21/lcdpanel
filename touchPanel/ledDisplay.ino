@@ -1,5 +1,7 @@
 /*
- * touch panel led
+  touch panel led
+  
+  We are using shift register to light up the led.
  */
 void led(uint8_t data[], uint8_t clk[], uint8_t latch[], uint8_t num){
 
