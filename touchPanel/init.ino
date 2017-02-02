@@ -1,11 +1,15 @@
+/*
+  Initialization for serial, output pin and MPR121
+ */
 void initialization(){
   initSerial();
   initOutput();
-  while(!mpr){
-    initMPR();
-  }
+  initMPR();
 }
 
+/*
+  Serial Initialization
+ */
 void initSerial(){
   Serial.begin(9600);
   mySerial.begin(2400);
@@ -23,46 +27,37 @@ void initMPR(){
   
   Serial.println("MPR121 Capacitive Touch Sensor Initialization");
 
-  if((millis() - resetMillis) >= resetUpdate){
-    resetMillis = millis();
-    mpr = false;
-    return;    
-  }
-  
+  // Initializing the MPR121 
   while(!mprA.begin(0x5A)) {
     Serial.println("MPR121 0x5A not found, check wiring?");
-    mpr = false;
-  }/*else{
-    Serial.println("MPR121 0x5A found!");
-  }*/
-  // add 0x5B achieve by cutting the jumper on add pin and shorting add pin to 3.3v pin
+  }
+
+  // address 0x5B achieve by cutting the jumper on add pin and shorting add pin to 3.3v pin
   while(!mprB.begin(0x5B)) {
     Serial.println("MPR121 0x5B not found, check wiring?");
-    mpr = false;
-  }/*else{
-    Serial.println("MPR121 05xB found!");
-  }*/
+  }
 
-  Serial.println("MPR121 05xB found!");
+  Serial.println("MPR121 found!");
 
+  // This loop is use to get the initial value of touch sensor
   for(int i = 0; i < 17; i++){
     relValue[i] = relVal(i);
   }
 
-  mpr = true;
 }
-
 
 /*
  * Output initialization
  */
 void initOutput(){
 
+  // buzzer and start LED pin initialization
   pinMode(startLED, OUTPUT);
   pinMode(buzzer, OUTPUT);
   digitalWrite(startLED, LOW);
   digitalWrite(buzzer, LOW);
   
+  // touch panel led and 7 segment pin initialization 
   for(uint8_t i = 0; i < arraySize(latchPin); i++){
     latch[i].pin = latchPin[i];
     latch[i].state = !outputLogic;
@@ -91,22 +86,6 @@ void bebunyi(int bunyik){
   }
   if(bunyik == 0){
     digitalWrite(buzzer, LOW);
-    /*
-    if((millis() - bunyiMillis) >= bunyiUpdate){
-      bunyiMillis = millis();
-      digitalWrite(buzzer, LOW);
-      led(dataPin, clockPin, latchPin, 8);
-    }
-    */
-  }
-}
-
-void dingdingding(){
-  for(int j = 0; j < 5; j++){
-    digitalWrite(buzzer, HIGH);
-    delay(100);
-    digitalWrite(buzzer, LOW);
-    delay(100);
   }
 }
 
